@@ -1,4 +1,12 @@
+cmake_minimum_required(VERSION 3.0)
+
 project (TREVI)
+
+option(USE_LOGGING "Build with logging capability" OFF)
+option(USE_PROFILING "Build with profiling capability" OFF)
+option(BUILD_EXAMPLE_APPS "Build Example Applications" ON)
+option(ARM_CROSS_COMPILE "Is the project cross compiling ?" OFF)
+option(BUILD_STATIC_LIB "Build novalink library as a static library" ON)
 
 ## CHECK FOR COMPILER CAPABILITIES
 include(CheckCXXCompilerFlag)
@@ -13,12 +21,8 @@ else()
 endif()
 ##
 
-include_directories(${TREVI_SOURCE_DIR}/include)
-INCLUDE_DIRECTORIES(${TREVI_SOURCE_DIR}/extdeps/concurrentqueue)
+add_subdirectory(lib)
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -msse4.1" )
-
-file (GLOB_RECURSE TREVI_SRC ${TREVI_SOURCE_DIR}/src/*.c*)
-file (GLOB_RECURSE TREVI_HEADERS ${TREVI_SOURCE_DIR}/include/*.h)
-
-add_executable(trevi ${TREVI_SRC} ${TREVI_HEADERS} )
+if( BUILD_EXAMPLE_APPS )
+    add_subdirectory( examples )
+endif( BUILD_EXAMPLE_APPS )
