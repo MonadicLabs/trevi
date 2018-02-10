@@ -8,6 +8,8 @@
 #include "datablock.h"
 #include "utils.h"
 
+namespace trevi
+{
 class CodeBlock : public DataBlock
 {
 public:
@@ -34,6 +36,8 @@ public:
 
     void setCompositionField(uint32_t offset, std::set< uint32_t > compoSet );
     void dumpCompositionField();
+    void dumpCompositionBitset();
+
     std::string dumpCompositionFieldStr();
     std::set<uint32_t> getCompositionSet();
 
@@ -45,7 +49,7 @@ public:
 
     void dumpPayload()
     {
-        print_bytes( std::cerr, "CodeBlock Payload", (const unsigned char*)payload_ptr(), payload_size() );
+        trevi_print_bytes( std::cerr, "CodeBlock Payload", (const unsigned char*)payload_ptr(), payload_size() );
     }
 
 private:
@@ -67,3 +71,4 @@ private:
 protected:
 
 };
+}

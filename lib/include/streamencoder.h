@@ -9,6 +9,7 @@
 
 #include <cstdint>
 
+namespace trevi {
 class Encoder;
 class StreamEncoder
 {
@@ -19,13 +20,17 @@ public:
     StreamEncoder(int encodingWindowSize = 8, int numSourceBlockPerCodeBlock = 1, int numCodeBlockPerSourceBlock = 1);
     virtual ~StreamEncoder();
 
-    void addData(std::shared_ptr<SourceBlock> cb );
+    void addData(std::shared_ptr<trevi::SourceBlock> cb , uint8_t streamId = 0 );
     void addData( uint8_t* buffer, int bufferSize );
 
     void dumpEncodingWindow();
 
     bool hasEncodedBlocks();
-    std::shared_ptr< CodeBlock > getEncodedBlock();
+    std::shared_ptr< trevi::CodeBlock > getEncodedBlock();
+
+    void dumpCodeBlocks();
+
+    void setCodeRate( int nsrc, int ncode );
 
 private:
     void init();
@@ -38,23 +43,25 @@ private:
     int _numCodeBlockPerSourceBlock;
 
     std::deque< uint32_t > _encodingWindow;
-    std::deque< std::shared_ptr< SourceBlock > > _sourceBlockBuffer;
+    std::deque< std::shared_ptr< trevi::SourceBlock > > _sourceBlockBuffer;
 
-    void pushSourceBlock( std::shared_ptr< SourceBlock > cb );
+    void pushSourceBlock(std::shared_ptr< trevi::SourceBlock > cb , uint8_t streamId = 0);
     uint32_t oldestSeqIdx();
     uint32_t latestSeqIdx();
 
     std::default_random_engine generator;
     std::default_random_engine degree_generator;
 
-    std::shared_ptr< CodeBlock > createEncodedBlock( uint16_t degree );
-    std::shared_ptr< CodeBlock > selectRandomSourceBlock();
+    std::shared_ptr< trevi::CodeBlock > createEncodedBlock( uint16_t degree );
+    std::shared_ptr< trevi::CodeBlock > selectRandomSourceBlock();
     uint16_t pickDegree();
 
-    std::deque< std::shared_ptr< CodeBlock > > _codeBlocks;
+    std::deque< std::shared_ptr< trevi::CodeBlock > > _codeBlocks;
 
     Encoder * _parent;
 
 protected:
 
 };
+}
+

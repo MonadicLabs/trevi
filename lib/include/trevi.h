@@ -77,6 +77,15 @@ int trevi_encode( trevi_encoder* encoder, int streamId, const void* buffer, int 
 int trevi_encoder_get_encoded_data( trevi_encoder* encoder, const void* out_buffer );
 
 ///
+/// \brief trevi_encoder_set_stream_coderate
+/// \param streamId
+/// \param num_source_block_per_code_block
+/// \param num_code_block_per_source_block
+/// \return
+///
+int trevi_encoder_set_stream_coderate(trevi_encoder *encoder, int streamId, int num_source_block_per_code_block, int num_code_block_per_source_block );
+
+///
 /// \brief trevi_create_decoder Create a new decoder
 /// \return A pointer to a newly created trevi_decoder
 ///

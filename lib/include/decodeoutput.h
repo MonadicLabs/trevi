@@ -6,9 +6,10 @@
 
 #include "sourceblock.h"
 
+namespace trevi {
 typedef struct
 {
-    std::shared_ptr< SourceBlock > block;
+    std::shared_ptr< trevi::SourceBlock > block;
     uint32_t stream_idx;
     uint32_t global_idx;
 } DecodeOutput;
@@ -20,3 +21,4 @@ struct DecodeOutputComparator
         return (struct1.global_idx < struct2.global_idx);
     }
 };
+}

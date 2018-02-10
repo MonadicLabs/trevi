@@ -50,8 +50,6 @@
 
 //------------------------------------------------------------------------------
 // Platform/Architecture
-#define LINUX_ARM
-//#define HAVE_ARM_NEON_H
 
 #if defined(ANDROID) || defined(IOS) || defined(LINUX_ARM)
     #define GF256_TARGET_MOBILE

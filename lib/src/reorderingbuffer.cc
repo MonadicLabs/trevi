@@ -8,7 +8,7 @@ using namespace std;
 
 #include <unistd.h>
 
-void ReorderingBuffer::addBlock(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr<SourceBlock> sb)
+void ReorderingBuffer::addBlock(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr<trevi::SourceBlock> sb)
 {
     // If the idx is far enough, reset buffer and start clean...
 
@@ -34,9 +34,9 @@ bool ReorderingBuffer::available()
     return _outputQueue.size() > 0;
 }
 
-std::shared_ptr<SourceBlock> ReorderingBuffer::pop()
+std::shared_ptr<trevi::SourceBlock> ReorderingBuffer::pop()
 {
-    std::shared_ptr<SourceBlock> ret = nullptr;
+    std::shared_ptr<trevi::SourceBlock> ret = nullptr;
     if( _outputQueue.size() > 0 )
     {
         ret = _outputQueue.front();
@@ -45,14 +45,14 @@ std::shared_ptr<SourceBlock> ReorderingBuffer::pop()
     return ret;
 }
 
-void ReorderingBuffer::insert(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr<SourceBlock> sb)
+void ReorderingBuffer::insert(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr<trevi::SourceBlock> sb)
 {
-    DecodeOutput deco;
+    trevi::DecodeOutput deco;
     deco.block = sb;
     deco.stream_idx = stream_idx;
     deco.global_idx = global_idx;
     _buffer.push_back( deco );
-    std::sort( _buffer.begin(), _buffer.end(), DecodeOutputComparator() );
+    std::sort( _buffer.begin(), _buffer.end(), trevi::DecodeOutputComparator() );
 }
 
 void ReorderingBuffer::dump()

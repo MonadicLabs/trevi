@@ -3,7 +3,7 @@ project (LIBTREVI)
 
 # Set custom cmake scripts directory
 set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${LIBNOVALINK_SOURCE_DIR}/cmake")
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -fpermissive -flax-vector-conversions -Wcast-align" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -fpermissive -flax-vector-conversions -Wcast-align -msse3 -mssse3" )
 SET( CMAKE_EXE_LINKER_FLAGS "-pthread")
 
 # C99
@@ -42,6 +42,10 @@ if( USE_LOGGING )
     add_definitions( -DUSE_LOGGING )
     set( TREVI_DEPS "${TREVI_DEPS}" )
 endif()
+
+# SIMDE
+INCLUDE_DIRECTORIES( ${TREVI_SOURCE_DIR}/simde/simde )
+file (GLOB_RECURSE SIMDE_HEADERS ${TREVI_SOURCE_DIR}/simde/simde/*.h*)
 
 # Global source fetching
 file ( GLOB_RECURSE LIBTREVI_CPP ./src/*.c* )

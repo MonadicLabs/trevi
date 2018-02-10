@@ -2,6 +2,8 @@
 
 #include <memory>
 
+namespace trevi
+{
 class DataBlock
 {
 public:
@@ -22,3 +24,4 @@ protected:
     std::shared_ptr<void>   _data;
 
 };
+}

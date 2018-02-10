@@ -2,7 +2,8 @@
 
 #include "datablock.h"
 
-class SourceBlock : public DataBlock
+namespace trevi {
+class SourceBlock : public trevi::DataBlock
 {
 public:
     // From payload
@@ -34,3 +35,4 @@ private:
 protected:
 
 };
+}

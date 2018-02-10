@@ -1,24 +1,26 @@
 
 #include "decoder.h"
 
-Decoder::Decoder()
+using namespace trevi;
+
+trevi::Decoder::Decoder()
 {
     _buffer = std::make_shared<ReorderingBuffer>(64);
 }
 
-Decoder::~Decoder()
+trevi::Decoder::~Decoder()
 {
 
 }
 
-void Decoder::addStream(int streamId, StreamDecoder *decoder)
+void trevi::Decoder::addStream(int streamId, StreamDecoder *decoder)
 {
     _decoders.insert( std::make_pair( streamId, decoder ) );
     decoder->setParent( this );
     return;
 }
 
-void Decoder::removeStream(int streamId)
+void trevi::Decoder::removeStream(int streamId)
 {
     auto kv = _decoders.find( streamId );
     if( kv != _decoders.end() )
@@ -27,13 +29,13 @@ void Decoder::removeStream(int streamId)
     }
 }
 
-void Decoder::addCodeBlock(uint8_t *buffer, int bufferSize)
+void trevi::Decoder::addCodeBlock(uint8_t *buffer, int bufferSize)
 {
-    std::shared_ptr<CodeBlock> cb = std::make_shared<CodeBlock>( buffer, bufferSize );
+    std::shared_ptr<trevi::CodeBlock> cb = std::make_shared<trevi::CodeBlock>( buffer, bufferSize );
     addCodeBlock( cb );
 }
 
-void Decoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
+void trevi::Decoder::addCodeBlock(std::shared_ptr<trevi::CodeBlock> cb)
 {
     uint8_t streamId = cb->get_stream_id();
     for( auto kv : _decoders )
@@ -45,17 +47,22 @@ void Decoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
     }
 }
 
-void Decoder::onNewDecodeOutput(const DecodeOutput &deco)
+void trevi::Decoder::onNewDecodeOutput(const trevi::DecodeOutput &deco)
 {
     _buffer->addBlock( deco.stream_idx, deco.global_idx, deco.block );
+    // _output.push_back( deco );
 }
 
-bool Decoder::available()
+bool trevi::Decoder::available()
 {
     return _buffer->available();
+    // return _output.size() > 0;
 }
 
-std::shared_ptr<SourceBlock> Decoder::pop()
+std::shared_ptr<trevi::SourceBlock> trevi::Decoder::pop()
 {
+    //    DecodeOutput deco = _output.front();
+    //    _output.pop_front();
+    //    return deco.block;
     return _buffer->pop();
 }

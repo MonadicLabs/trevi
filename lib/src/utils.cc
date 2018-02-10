@@ -1,8 +1,9 @@
 
-#include "utils.h"
+#include "../include/utils.h"
 
 #include <iomanip>
 #include <iostream>
+#include <set>
 
 #include <cstring>
 
@@ -14,6 +15,9 @@
 #include <ifaddrs.h>
 
 using namespace std;
+
+#define is_aligned(POINTER, BYTE_COUNT) \
+    (((uintptr_t)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
 
 bool isLittleEndian()
 {
@@ -64,7 +68,7 @@ uint32_t read32FromBuffer(void *ptr)
     return ntohl( nValue );
 }
 
-void print_bytes(std::ostream& out, const char *title, const unsigned char *data, size_t dataLen, bool format, int symbol_per_line )
+void trevi_print_bytes(std::ostream& out, const char *title, const unsigned char *data, size_t dataLen, bool format, int symbol_per_line )
 {
     out << title << std::endl;
     out << std::setfill('0');
@@ -96,4 +100,60 @@ void dumbXOR(uint8_t *a, uint8_t *b, int size )
     {
         a[ i ] = a[ i ] ^ b[i];
     }
+}
+
+#ifdef __arm__
+void memcpy_neon_align32( char *dst, const char *src, int count )
+{
+    int   remain;
+    char* fdst;
+    const char* fsrc;
+
+    remain = count;
+    fdst   = dst;
+    fsrc   = src;
+
+    while( 32 <= remain )
+    {
+        asm volatile (
+                    ".fpu  neon\n"
+                    "1:                                               \n"
+                    "subs     %[remain], %[remain], #32               \n"
+                    "vld1.u8  {d0, d1, d2, d3}, [%[fsrc],:256]!       \n"
+                    "vst1.u8  {d0, d1, d2, d3}, [%[fdst],:256]!       \n"
+                    "bgt      1b                                      \n"
+                    : [fsrc]"+r"(fsrc), [fdst]"+r"(fdst), [remain]"+r"(remain)
+                    :
+                    : "d0", "d1", "d2", "d3", "cc", "memory"
+                    );
+    }
+}
+#endif
+
+void trevi_memcpy(void *dst, const void *src, size_t num)
+{
+//#ifdef __arm__
+//    cerr << "is_aligned(src)=" << is_aligned(src, 32) << " is_aligned(dst)=" << is_aligned(dst, 32) << endl;
+//    if( is_aligned(dst,32) && is_aligned(src,32) )
+//    {
+//        cerr << "neon_memcpy" << endl;
+//        memcpy_neon_align32( dst, src, num );
+//    }
+//    else
+//    {
+//        cerr << "std memcpy" << endl;
+//        return memcpy(dst,src, num);
+//    }
+//#else
+    memcpy( dst, src, num );
+//#endif
+}
+
+void *trevi_malloc(size_t s)
+{
+//#ifdef __arm__
+//    return aligned_alloc( 32, s );
+//#else
+    return malloc(s);
+//#endif
 }

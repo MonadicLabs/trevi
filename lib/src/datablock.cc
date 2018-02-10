@@ -1,29 +1,30 @@
 
-#include "datablock.h"
+#include "../include/datablock.h"
+#include "../include/utils.h"
 
-DataBlock::DataBlock()
+trevi::DataBlock::DataBlock()
 {
 
 }
 
-DataBlock::~DataBlock()
+trevi::DataBlock::~DataBlock()
 {
 
 }
 
-void *DataBlock::buffer_ptr()
+void *trevi::DataBlock::buffer_ptr()
 {
     return _data.get();
 }
 
-int DataBlock::buffer_size()
+int trevi::DataBlock::buffer_size()
 {
     return _bufferSize;
 }
 
-void DataBlock::initMemory(int bufferSize)
+void trevi::DataBlock::initMemory(int bufferSize)
 {
     _bufferSize = bufferSize;
-    char* rawPtr = (char*)malloc( _bufferSize );
+    char* rawPtr = (char*)trevi_malloc( _bufferSize );
     _data = std::shared_ptr<void>( (void*)(rawPtr), free );
 }

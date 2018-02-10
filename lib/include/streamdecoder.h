@@ -9,6 +9,7 @@
 #include "ogesolver.h"
 #include "reorderingbuffer.h"
 
+namespace trevi {
 class Decoder;
 class StreamDecoder
 {
@@ -19,10 +20,10 @@ public:
     virtual ~StreamDecoder();
 
     void addCodeBlock( uint8_t* buffer, int bufferSize );
-    void addCodeBlock( std::shared_ptr<CodeBlock> cb );
+    void addCodeBlock( std::shared_ptr<trevi::CodeBlock> cb );
 
     bool available();
-    std::shared_ptr< SourceBlock > pop();
+    std::shared_ptr< trevi::SourceBlock > pop();
 
 private:
     int _curMinSeqIdx;
@@ -40,3 +41,4 @@ private:
 protected:
 
 };
+}

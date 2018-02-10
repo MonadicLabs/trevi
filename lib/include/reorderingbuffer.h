@@ -22,19 +22,25 @@ public:
 
     }
 
-    void addBlock( uint32_t stream_idx, uint32_t global_idx, std::shared_ptr< SourceBlock > sb );
+    void addBlock( uint32_t stream_idx, uint32_t global_idx, std::shared_ptr< trevi::SourceBlock > sb );
 
     bool available();
-    std::shared_ptr< SourceBlock > pop();
+    std::shared_ptr< trevi::SourceBlock > pop();
+
+    void clear()
+    {
+        _buffer.clear();
+        _outputQueue.clear();
+    }
 
 private:
     int _windowSize;
 
-    std::deque< DecodeOutput > _buffer;
+    std::deque< trevi::DecodeOutput > _buffer;
 
-    std::deque< std::shared_ptr< SourceBlock > > _outputQueue;
+    std::deque< std::shared_ptr< trevi::SourceBlock > > _outputQueue;
 
-    void insert(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr< SourceBlock > sb );
+    void insert(uint32_t stream_idx, uint32_t global_idx, std::shared_ptr< trevi::SourceBlock > sb );
 
     void dump();
 

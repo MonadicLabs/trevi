@@ -3,6 +3,8 @@
 #include "ogesolver.h"
 #include "decoder.h"
 
+// #define USE_LOG
+
 #ifdef USE_PROFILING
 #include "profiler.h"
 #endif
@@ -12,7 +14,7 @@
 
 using namespace std;
 
-StreamDecoder::StreamDecoder(uint16_t decodingWindowSize)
+trevi::StreamDecoder::StreamDecoder(uint16_t decodingWindowSize)
     :_parent(nullptr), _decodingWindowSize(decodingWindowSize)
 {
     _curMinSeqIdx = 0;
@@ -22,24 +24,34 @@ StreamDecoder::StreamDecoder(uint16_t decodingWindowSize)
     _buffer = std::make_shared<ReorderingBuffer>( _decodingWindowSize );
 }
 
-StreamDecoder::~StreamDecoder()
+trevi::StreamDecoder::~StreamDecoder()
 {
 
 }
 
-void StreamDecoder::addCodeBlock(uint8_t *buffer, int bufferSize)
+void trevi::StreamDecoder::addCodeBlock(uint8_t *buffer, int bufferSize)
 {
 
 }
 
-void StreamDecoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
+void trevi::StreamDecoder::addCodeBlock(std::shared_ptr<trevi::CodeBlock> cb)
 {
 
 #ifdef USE_PROFILING
     $
         #endif
 
-            std::set< uint32_t > compo = cb->getCompositionSet();
+    std::set< uint32_t > compo = cb->getCompositionSet();
+
+#ifdef USE_LOG
+//    cerr << "decoder:" << endl;
+//    cerr << "decoder_seq_idx=" << cb->get_stream_sequence_idx() << endl;
+//    cb->dumpCompositionBitset();
+//    cb->dumpCompositionField();
+//    print_bytes( cerr, "decoder_input", cb->buffer_ptr(), cb->buffer_size() );
+//    cerr << "__________________" << endl;
+#endif
+
     auto minSeqIdx = *compo.begin();
     auto maxSeqIdx = *compo.rbegin();
 
@@ -52,13 +64,18 @@ void StreamDecoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
     if( minSeqIdx < _curMinSeqIdx )
     {
         _infPacketIdxCount++;
-        if( _infPacketIdxCount > _decodingWindowSize )
+        if( _infPacketIdxCount > 2 )
         {
-            sleep(1);
-            _curMinSeqIdx = minSeqIdx;
-            _curMaxSeqIdx = minSeqIdx;
+            // sleep(1);
+            _curMinSeqIdx = 0;
+            _curMaxSeqIdx = 0;
             _oge->reset();
+            if( _parent )
+            {
+                _parent->clear();
+            }
             _infPacketIdxCount = 0;
+            cerr << "reset." << endl;
         }
     }
 
@@ -95,7 +112,7 @@ void StreamDecoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
 
     while( _oge->_output.size() > 0 )
     {
-        DecodeOutput doutput = _oge->_output.front();
+        trevi::DecodeOutput doutput = _oge->_output.front();
         _oge->_output.pop_front();
         if( _parent )
         {
@@ -110,17 +127,17 @@ void StreamDecoder::addCodeBlock(std::shared_ptr<CodeBlock> cb)
 
 }
 
-bool StreamDecoder::available()
+bool trevi::StreamDecoder::available()
 {
     return _buffer->available();
 }
 
-std::shared_ptr<SourceBlock> StreamDecoder::pop()
+std::shared_ptr<trevi::SourceBlock> trevi::StreamDecoder::pop()
 {
     return _buffer->pop();
 }
 
-void StreamDecoder::setParent(Decoder *parent)
+void trevi::StreamDecoder::setParent(trevi::Decoder *parent)
 {
     _parent = parent;
 }

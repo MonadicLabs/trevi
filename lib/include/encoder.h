@@ -6,6 +6,7 @@
 
 #include "streamencoder.h"
 
+namespace trevi {
 class Encoder
 {
 public:
@@ -15,11 +16,13 @@ public:
     void addStream( int stremaId, StreamEncoder* encoder );
     void removeStream( int streamId );
 
-    void addData( int streamId, std::shared_ptr<SourceBlock> sb );
+    void addData( int streamId, std::shared_ptr<trevi::SourceBlock> sb );
     void addData( int streamId, uint8_t* buffer, int bufferSize );
 
     bool hasEncodedBlocks();
-    std::shared_ptr< CodeBlock > getEncodedBlock();
+    std::shared_ptr< trevi::CodeBlock > getEncodedBlock();
+
+    void setStreamCoderate(int streamId, int nsrc, int ncode );
 
 private:
     std::map< uint8_t, StreamEncoder* > _encoders;
@@ -28,3 +31,4 @@ private:
 protected:
 
 };
+}

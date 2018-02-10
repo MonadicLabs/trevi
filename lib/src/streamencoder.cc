@@ -1,7 +1,7 @@
 
 #include "streamencoder.h"
-#include "gf256.h"
 #include "profiler.h"
+#include "xor.h"
 
 #include <memory>
 #include <iostream>
@@ -14,26 +14,26 @@
 
 using namespace std;
 
-StreamEncoder::StreamEncoder(int encodingWindowSize, int numSourceBlockPerCodeBlock, int numCodeBlockPerSourceBlock)
+trevi::StreamEncoder::StreamEncoder(int encodingWindowSize, int numSourceBlockPerCodeBlock, int numCodeBlockPerSourceBlock)
     :_encodingWindowSize(encodingWindowSize), _numSourceBlockPerCodeBlock(numSourceBlockPerCodeBlock), _numCodeBlockPerSourceBlock(numCodeBlockPerSourceBlock)
 {
     init();
 }
 
-StreamEncoder::~StreamEncoder()
+trevi::StreamEncoder::~StreamEncoder()
 {
 
 }
 
-void StreamEncoder::addData(std::shared_ptr<SourceBlock> cb)
+void trevi::StreamEncoder::addData(std::shared_ptr<trevi::SourceBlock> cb, uint8_t streamId )
 {
 
 #ifdef USE_PROFILING
     $
-#endif
+        #endif
 
-    // Add to encoding buffer
-    cb->updateCRC();
+            // Add to encoding buffer
+            cb->updateCRC();
     pushSourceBlock(cb);
 
     if( _encodingWindow.size() > 0 && _curSeqIdx % _numSourceBlockPerCodeBlock == 0 )
@@ -43,19 +43,22 @@ void StreamEncoder::addData(std::shared_ptr<SourceBlock> cb)
             auto polbak = createEncodedBlock( pickDegree() );
             if( polbak != nullptr )
             {
+                polbak->set_stream_id(streamId);
                 _codeBlocks.push_back( polbak );
             }
         }
     }
+    // dumpCodeBlocks();
+    // cerr << "_curSeqIdx=" << _curSeqIdx << endl;
 }
 
-void StreamEncoder::addData(uint8_t *buffer, int bufferSize)
+void trevi::StreamEncoder::addData(uint8_t *buffer, int bufferSize)
 {
-    std::shared_ptr< SourceBlock > cb = std::make_shared<SourceBlock>( buffer, bufferSize );
+    std::shared_ptr< trevi::SourceBlock > cb = std::make_shared<trevi::SourceBlock>( buffer, bufferSize );
     addData( cb );
 }
 
-void StreamEncoder::dumpEncodingWindow()
+void trevi::StreamEncoder::dumpEncodingWindow()
 {
     for( int i = 0; i < _encodingWindow.size(); ++i )
     {
@@ -64,14 +67,14 @@ void StreamEncoder::dumpEncodingWindow()
     cerr << endl;
 }
 
-bool StreamEncoder::hasEncodedBlocks()
+bool trevi::StreamEncoder::hasEncodedBlocks()
 {
     return _codeBlocks.size() > 0;
 }
 
-std::shared_ptr<CodeBlock> StreamEncoder::getEncodedBlock()
+std::shared_ptr<trevi::CodeBlock> trevi::StreamEncoder::getEncodedBlock()
 {
-    std::shared_ptr< CodeBlock > ret = nullptr;
+    std::shared_ptr< trevi::CodeBlock > ret = nullptr;
     if( hasEncodedBlocks() )
     {
         ret = _codeBlocks.front();
@@ -80,7 +83,7 @@ std::shared_ptr<CodeBlock> StreamEncoder::getEncodedBlock()
     return ret;
 }
 
-void StreamEncoder::init()
+void trevi::StreamEncoder::init()
 {
     _curSeqIdx = 0;
     srand( time(NULL) );
@@ -88,7 +91,7 @@ void StreamEncoder::init()
     degree_generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
-void StreamEncoder::pushSourceBlock(std::shared_ptr<SourceBlock> cb)
+void trevi::StreamEncoder::pushSourceBlock(std::shared_ptr<trevi::SourceBlock> cb, uint8_t streamId )
 {
     if( _encodingWindow.size() >= _encodingWindowSize )
     {
@@ -99,26 +102,27 @@ void StreamEncoder::pushSourceBlock(std::shared_ptr<SourceBlock> cb)
     _sourceBlockBuffer.push_back( cb );
 
     // Also output the degree 1 block immediatly
-    std::shared_ptr< CodeBlock > d1cb = std::make_shared< CodeBlock >( cb->buffer_size(), (uint8_t*)cb->buffer_ptr(), cb->buffer_size() );
+    std::shared_ptr< trevi::CodeBlock > d1cb = std::make_shared< trevi::CodeBlock >( cb->buffer_size(), (uint8_t*)cb->buffer_ptr(), cb->buffer_size() );
     std::set<uint32_t> compoSet;
     compoSet.insert(0);
     d1cb->setCompositionField(_curSeqIdx, compoSet );
+    d1cb->set_stream_id(streamId);
     _codeBlocks.push_back( d1cb );
 
     _curSeqIdx++;
 }
 
-uint32_t StreamEncoder::oldestSeqIdx()
+uint32_t trevi::StreamEncoder::oldestSeqIdx()
 {
     return _encodingWindow.front();
 }
 
-uint32_t StreamEncoder::latestSeqIdx()
+uint32_t trevi::StreamEncoder::latestSeqIdx()
 {
     return _encodingWindow.back();
 }
 
-std::shared_ptr<CodeBlock> StreamEncoder::createEncodedBlock(uint16_t degree)
+std::shared_ptr<trevi::CodeBlock> trevi::StreamEncoder::createEncodedBlock(uint16_t degree)
 {
 
     std::set<uint32_t> compoSet;
@@ -140,7 +144,7 @@ std::shared_ptr<CodeBlock> StreamEncoder::createEncodedBlock(uint16_t degree)
     for (it=compoSet.begin(); it!=compoSet.end(); ++it)
     {
         int idx = *it;
-        std::shared_ptr< SourceBlock > curCb = _sourceBlockBuffer[ idx ];
+        std::shared_ptr< trevi::SourceBlock > curCb = _sourceBlockBuffer[ idx ];
         if( curCb->buffer_size() > maxBlockSize )
         {
             maxBlockSize = curCb->buffer_size();
@@ -159,37 +163,46 @@ std::shared_ptr<CodeBlock> StreamEncoder::createEncodedBlock(uint16_t degree)
     for (it=compoSet.begin(); it!=compoSet.end(); ++it)
     {
         int idx = *it;
-        std::shared_ptr< SourceBlock > curCb = _sourceBlockBuffer[ idx ];
+        std::shared_ptr< trevi::SourceBlock > curCb = _sourceBlockBuffer[ idx ];
         memset( tmpBuffer_B, 0, maxBlockSize );
-        memcpy( tmpBuffer_B, curCb->buffer_ptr(), curCb->buffer_size() );
-        gf256_add_mem( tmpBuffer_A, tmpBuffer_B, maxBlockSize );
-        // dumbXOR( tmpBuffer_A, tmpBuffer_B, maxBlockSize );
+        trevi_memcpy( tmpBuffer_B, curCb->buffer_ptr(), curCb->buffer_size() );
+        trevi_xor( tmpBuffer_A, tmpBuffer_B, maxBlockSize );
     }
 
-    //    if( degree == 1 )
-    //        print_bytes( cerr, "addData_sb", (unsigned char*)tmpBuffer, maxBlockSize, true );
-
-    std::shared_ptr< CodeBlock > cbcode = std::make_shared<CodeBlock>( maxBlockSize, (uint8_t*)tmpBuffer_A, (int)maxBlockSize );
-    //    if( degree == 1 )
-    //        print_bytes( cerr, "addData_cb", (unsigned char*)cbcode->payload_ptr(), cbcode->payload_size(), true );
-
+    std::shared_ptr< trevi::CodeBlock > cbcode = std::make_shared<trevi::CodeBlock>( maxBlockSize, (uint8_t*)tmpBuffer_A, (int)maxBlockSize );
     cbcode->setCompositionField( oldestSeqIdx(), compoSet );
-    //    cerr << "dump compofield" << endl;
-    //    cbcode->dumpCompositionField();
-    //    cerr << "......" << endl;
-    cbcode->updateCRC();
 
     return cbcode;
 
 }
 
-std::shared_ptr<CodeBlock> StreamEncoder::selectRandomSourceBlock()
+std::shared_ptr<trevi::CodeBlock> trevi::StreamEncoder::selectRandomSourceBlock()
 {
     return nullptr;
 }
 
-uint16_t StreamEncoder::pickDegree()
+uint16_t trevi::StreamEncoder::pickDegree()
 {
     std::uniform_int_distribution<int> distribution(1, min((int)_encodingWindowSize, (int)_encodingWindow.size()) );
-    return distribution(degree_generator);
+    uint16_t ret = distribution(degree_generator);
+    return ret;
+}
+
+void trevi::StreamEncoder::dumpCodeBlocks()
+{
+    cerr << "###### CURRENT COEBLOCKS:" << endl;
+    for( std::shared_ptr< trevi::CodeBlock > cb : _codeBlocks )
+    {
+        cb->dumpCompositionField();
+    }
+    cerr << "#########################" << endl;
+}
+
+void trevi::StreamEncoder::setCodeRate(int nsrc, int ncode)
+{
+    if( nsrc > 0 )
+        _numSourceBlockPerCodeBlock = nsrc;
+
+    if( ncode >= 0 )
+        _numCodeBlockPerSourceBlock = ncode;
 }

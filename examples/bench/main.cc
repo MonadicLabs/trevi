@@ -29,7 +29,7 @@ int main( int argc, char** argv )
     a.add<int>("nsrc_blocks", 's', "Number of source block after which we send code blocks", false, 1 );
     a.add<int>("ncode_blocks", 'c', "Number of coded blocks to send after processing nsrc_blocks", false, 1 );
 
-    a.add<float>("bad_state_proba", 'b', "Simulated loss - steady state probability for the bad state of Gilbert-Elliot model", false, 0.05f, cmdline::range(0.0, 1.0) );
+    a.add<float>("bad_state_proba", 'b', "Simulated loss - steady state probability for the bad state of Gilbert-Elliot model", false, 0.2f, cmdline::range(0.0, 1.0) );
     a.add<float>("expected_burst_length", 'B', "Simulated loss - expected sojourn time in the bad state (ie. error burst length)", false, 4.0f );
 
     a.parse_check(argc, argv);
@@ -166,6 +166,7 @@ int main( int argc, char** argv )
         }
 
         dump_profiling_info();
+        // sleep(1);
 
     }
 

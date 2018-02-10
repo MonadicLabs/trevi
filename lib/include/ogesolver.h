@@ -19,6 +19,7 @@ using namespace std;
 
 // #define DEBUG_ORDER
 // #define USE_LOG
+// #define IMMEDIATE_MODE
 
 class OGESolver
 {
@@ -38,16 +39,18 @@ public:
 
     }
 
-    void addBlock( std::shared_ptr< CodeBlock > cb )
+    void addBlock( std::shared_ptr< trevi::CodeBlock > cb )
     {
 
 #ifdef USE_PROFILING
         $
         #endif
 
-        std::set< uint32_t > compo = cb->getCompositionSet();
-        // cerr << "new input: " << endl;
-        // printSet( compo );
+                std::set< uint32_t > compo = cb->getCompositionSet();
+#ifdef USE_LOG
+        cerr << "@@@@@@ new input: " << endl;
+        printSet( compo );
+#endif
         stringstream sstr;
         sstr << "{{{{{{{{{{{{{{{{{{{{{{ " << (int)cb->get_stream_sequence_idx() << endl;
 #ifdef DEBUG_ORDER
@@ -98,30 +101,32 @@ public:
 
         {
 #ifdef USE_PROFILING
-    $
-#endif
-            // cerr << "diff.size()=" << diff.size() << endl;
-
+            $
+        #endif
+                    // cerr << "diff.size()=" << diff.size() << endl;
+#ifndef IMMEDIATE_MODE
             for( int k = 0; k < diff.size(); ++k )
             {
-                std::shared_ptr< CodeBlock > cb = _blocks[ diff[k] - _curOffset ];
-                std::shared_ptr<SourceBlock> sb = std::make_shared<SourceBlock>( cb->payload_size(), (uint8_t*)cb->payload_ptr() );
+                std::shared_ptr< trevi::CodeBlock > cb = _blocks[ diff[k] - _curOffset ];
+                std::shared_ptr<trevi::SourceBlock> sb = std::make_shared<trevi::SourceBlock>( cb->payload_size(), (uint8_t*)cb->payload_ptr() );
                 uint32_t idx = diff[k];
-                DecodeOutput doutput;
+                trevi::DecodeOutput doutput;
                 doutput.block = sb;
                 doutput.stream_idx = idx;
                 doutput.global_idx = sb->get_global_sequence_idx();
                 _output.push_back( doutput );
             }
+#endif
         }
     }
 
-    void addEquation( std::vector<uint32_t> components, std::shared_ptr<CodeBlock> blk )
+    void addEquation( std::vector<uint32_t> components, std::shared_ptr<trevi::CodeBlock> blk )
     {
 
 #ifdef USE_PROFILING
         $
         #endif
+
                 int s = -1;
         int componentSize = components.size();
         int component0 = components[0];
@@ -175,7 +180,7 @@ public:
 
     }
 
-    bool xorRow( int s, std::vector<uint32_t>& indices, std::shared_ptr<CodeBlock> block )
+    bool xorRow( int s, std::vector<uint32_t>& indices, std::shared_ptr<trevi::CodeBlock> block )
     {
 
 #ifdef USE_PROFILING
@@ -277,7 +282,7 @@ public:
         _curOffset = 0;
         const int pol = _decodingWindowSize;
         _coeffs = std::vector< std::vector<uint32_t> >(pol);
-        _blocks = std::vector< std::shared_ptr< CodeBlock > >(pol);
+        _blocks = std::vector< std::shared_ptr< trevi::CodeBlock > >(pol);
     }
 
     void shiftWindowTo( uint32_t minValue )
@@ -285,13 +290,26 @@ public:
 
 #ifdef USE_PROFILING
         $
-#endif
+        #endif
 
-        int n = minValue - _curOffset;
+                int n = minValue - _curOffset;
         // cerr << "n=" << n << " minValue=" << minValue << " _curOffset=" << _curOffset << endl;
         for( int k = 0; k < n && _coeffs.size() > 0; ++k )
         {
-            // cerr << "_coeffs.size()=" << _coeffs.size() << endl;
+#ifdef IMMEDIATE_MODE
+            if( _coeffs[0].size() == 1 )
+            {
+                // cerr << "## PUSHED OUT: " << _coeffs[0][0] << endl;
+                std::shared_ptr< trevi::CodeBlock > cb = _blocks[0];
+                std::shared_ptr<trevi::SourceBlock> sb = std::make_shared<trevi::SourceBlock>( cb->payload_size(), (uint8_t*)cb->payload_ptr() );
+                uint32_t idx = _coeffs[0][0];
+                trevi::DecodeOutput doutput;
+                doutput.block = sb;
+                doutput.stream_idx = cb->get_stream_sequence_idx();
+                doutput.global_idx = sb->get_global_sequence_idx();
+                _output.push_back( doutput );
+            }
+#endif
             _coeffs.erase( _coeffs.begin() );
             _blocks.erase( _blocks.begin() );
         }
@@ -310,11 +328,11 @@ public:
     std::vector< uint32_t > unique_blocks()
     {
 #ifdef USE_PROFILING
-    $
-#endif
-            // cerr << "unique_blocks: n = " << _coeffs.size() << endl;
+        $
+        #endif
+                // cerr << "unique_blocks: n = " << _coeffs.size() << endl;
 
-        std::vector< uint32_t > ret;
+                std::vector< uint32_t > ret;
         for( std::vector< uint32_t > vv : _coeffs )
         {
             if( vv.size() == 1 )
@@ -333,7 +351,7 @@ public:
         #endif
 
                 std::vector< uint32_t > ret;
-        std::shared_ptr< CodeBlock > cb = _blocks[ blockIdx - _curOffset ];
+        std::shared_ptr< trevi::CodeBlock > cb = _blocks[ blockIdx - _curOffset ];
 
         // Loop through all coeffs
         for( int i = 0; i < _coeffs.size(); ++i )
@@ -348,7 +366,7 @@ public:
                     cerr << "---- contains " << blockIdx << endl;
 #endif
                     // Do something - XOR the block blockIdx from the found block
-                    std::shared_ptr< CodeBlock > block = _blocks[ i ];
+                    std::shared_ptr< trevi::CodeBlock > block = _blocks[ i ];
                     block->XOR_payload( cb );
 
 #ifdef USE_LOG
@@ -403,11 +421,11 @@ public:
 
     }
 
-    std::deque< DecodeOutput > _output;
+    std::deque< trevi::DecodeOutput > _output;
 
 private:
     std::vector< std::vector<uint32_t> >        _coeffs;
-    std::vector< std::shared_ptr<CodeBlock> >   _blocks;
+    std::vector< std::shared_ptr<trevi::CodeBlock> >   _blocks;
 
     int _decodingWindowSize;
     uint32_t _curOffset;
