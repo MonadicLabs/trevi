@@ -38,18 +38,18 @@ void trevi::StreamDecoder::addCodeBlock(std::shared_ptr<trevi::CodeBlock> cb)
 {
 
 #ifdef USE_PROFILING
-    $
-        #endif
+    rmt_ScopedCPUSample(StreamDecoder_addCodeBlock, 0);
+#endif
 
     std::set< uint32_t > compo = cb->getCompositionSet();
 
 #ifdef USE_LOG
-//    cerr << "decoder:" << endl;
-//    cerr << "decoder_seq_idx=" << cb->get_stream_sequence_idx() << endl;
-//    cb->dumpCompositionBitset();
-//    cb->dumpCompositionField();
-//    print_bytes( cerr, "decoder_input", cb->buffer_ptr(), cb->buffer_size() );
-//    cerr << "__________________" << endl;
+    //    cerr << "decoder:" << endl;
+    //    cerr << "decoder_seq_idx=" << cb->get_stream_sequence_idx() << endl;
+    //    cb->dumpCompositionBitset();
+    //    cb->dumpCompositionField();
+    //    print_bytes( cerr, "decoder_input", cb->buffer_ptr(), cb->buffer_size() );
+    //    cerr << "__________________" << endl;
 #endif
 
     auto minSeqIdx = *compo.begin();

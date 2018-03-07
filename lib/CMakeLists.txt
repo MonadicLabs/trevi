@@ -7,7 +7,7 @@ SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -fpermissive -flax-vector-con
 SET( CMAKE_EXE_LINKER_FLAGS "-pthread")
 
 # C99
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 # C++11
 include(CheckCXXCompilerFlag)
@@ -26,6 +26,15 @@ set( TREVI_DEPS "${TREVI_DEPS}" )
 
 # Set include directories
 include_directories( ${LIBTREVI_SOURCE_DIR}/include )
+
+# REMOTERY
+if( USE_PROFILING )
+INCLUDE_DIRECTORIES( ${TREVI_SOURCE_DIR}/remotery/lib )
+file (GLOB_RECURSE REMOTERY_SRC ${TREVI_SOURCE_DIR}/remotery/lib/*.c)
+file (GLOB_RECURSE REMOTERY_HEADERS ${TREVI_SOURCE_DIR}/remotery/lib/*.h*)
+set( TREVI_DEPS "${TREVI_DEPS};pthread" )
+add_definitions( -DUSE_PROFILING )
+endif()
 
 # DOLLAR
 if( USE_PROFILING )
@@ -52,7 +61,7 @@ file ( GLOB_RECURSE LIBTREVI_CPP ./src/*.c* )
 file ( GLOB_RECURSE LIBTREVI_HEADERS ./include/*.h )
 
 # SET SOURCES
-set( LIBTREVI_ALL_CPP ${LIBTREVI_CPP} ${LIBTREVI_HEADERS} ${DOLLAR_CPP} )
+set( LIBTREVI_ALL_CPP ${LIBTREVI_CPP} ${LIBTREVI_HEADERS} ${DOLLAR_SRC} ${REMOTERY_SRC} )
 
 if( BUILD_STATIC_LIB )
     add_library( trevi STATIC ${LIBTREVI_ALL_CPP} )
@@ -61,4 +70,4 @@ else()
 endif()
 
 # Link libraries
-target_link_libraries( trevi ${NOVALINK_DEPS} )
+target_link_libraries( trevi ${TREVI_DEPS} )

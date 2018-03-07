@@ -38,7 +38,7 @@ template< class T >
 void removeDups( std::vector< T >& vec )
 {
 #ifdef USE_PROFILING
-    $
+    rmt_ScopedCPUSample(removeDups, 0);
 #endif
     std::sort( vec.begin(), vec.end() );
     vec.erase( unique( vec.begin(), vec.end() ), vec.end() );

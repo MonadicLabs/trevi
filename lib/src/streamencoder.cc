@@ -29,11 +29,11 @@ void trevi::StreamEncoder::addData(std::shared_ptr<trevi::SourceBlock> cb, uint8
 {
 
 #ifdef USE_PROFILING
-    $
-        #endif
+    rmt_ScopedCPUSample(StreamEncoder_addData, 0);
+#endif
 
-            // Add to encoding buffer
-            cb->updateCRC();
+    // Add to encoding buffer
+    cb->updateCRC();
     pushSourceBlock(cb);
 
     if( _encodingWindow.size() > 0 && _curSeqIdx % _numSourceBlockPerCodeBlock == 0 )

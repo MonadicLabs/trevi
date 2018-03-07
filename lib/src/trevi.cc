@@ -3,6 +3,10 @@
 #include "xor.h"
 #include "encoder.h"
 
+#ifdef USE_PROFILING
+#include "profiler.h"
+#endif
+
 #include <cstring>
 
 #include <iostream>
@@ -14,6 +18,10 @@ using namespace std;
 void trevi_init()
 {
     init_xor();
+#ifdef USE_PROFILING
+    Remotery* rmt;
+    rmt_CreateGlobalInstance(&rmt);
+#endif
 }
 
 trevi_encoder *trevi_create_encoder()
@@ -57,16 +65,16 @@ int trevi_encode(trevi_encoder *encoder, int streamId, const void *buffer, int b
 
 int trevi_encoder_get_encoded_data(trevi_encoder *encoder, const void *out_buffer)
 {
-     trevi::Encoder * enc = reinterpret_cast<trevi::Encoder*>(encoder->encoderRef);
+    trevi::Encoder * enc = reinterpret_cast<trevi::Encoder*>(encoder->encoderRef);
 
-     if( enc->hasEncodedBlocks() )
-     {
-         std::shared_ptr< trevi::CodeBlock > cb = enc->getEncodedBlock();
-         memcpy( out_buffer, cb->buffer_ptr(), cb->buffer_size() );
-         return cb->buffer_size();
-     }
+    if( enc->hasEncodedBlocks() )
+    {
+        std::shared_ptr< trevi::CodeBlock > cb = enc->getEncodedBlock();
+        memcpy( out_buffer, cb->buffer_ptr(), cb->buffer_size() );
+        return cb->buffer_size();
+    }
 
-     return -1;
+    return -1;
 }
 
 int trevi_encoder_set_stream_coderate(trevi_encoder* encoder, int streamId, int num_source_block_per_code_block, int num_code_block_per_source_block)

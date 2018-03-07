@@ -20,6 +20,7 @@ using namespace std;
 // #define DEBUG_ORDER
 // #define USE_LOG
 // #define IMMEDIATE_MODE
+// #define SKIP_BP
 
 class OGESolver
 {
@@ -43,10 +44,10 @@ public:
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
+        rmt_ScopedCPUSample(OGESolver_addBlock, 0);
+#endif
 
-                std::set< uint32_t > compo = cb->getCompositionSet();
+        std::set< uint32_t > compo = cb->getCompositionSet();
 #ifdef USE_LOG
         cerr << "@@@@@@ new input: " << endl;
         printSet( compo );
@@ -77,6 +78,7 @@ public:
         cerr << "****" << endl;
 #endif
 
+#ifndef SKIP_BP
         bpPass( after );
         after = unique_blocks();
         std::set_difference(after.begin(), after.end(), before.begin(), before.end(),
@@ -98,12 +100,10 @@ public:
         cerr << str() << endl;
         cerr << "****" << endl;
 #endif
+#endif
 
         {
-#ifdef USE_PROFILING
-            $
-        #endif
-                    // cerr << "diff.size()=" << diff.size() << endl;
+            // cerr << "diff.size()=" << diff.size() << endl;
 #ifndef IMMEDIATE_MODE
             for( int k = 0; k < diff.size(); ++k )
             {
@@ -124,10 +124,10 @@ public:
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
+        rmt_ScopedCPUSample(OGESolver_addEquation, 0);
+#endif
 
-                int s = -1;
+        int s = -1;
         int componentSize = components.size();
         int component0 = components[0];
         int component0MinusOffset = components[0] - _curOffset;
@@ -184,10 +184,10 @@ public:
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
+        rmt_ScopedCPUSample(OGESolver_xorRow, 0);
+#endif
 
-                std::vector<uint32_t> newIndices;
+        std::vector<uint32_t> newIndices;
         std::vector<uint32_t> coeffs = _coeffs[s - _curOffset];
         int i = 0;
         int j = 0;
@@ -289,10 +289,10 @@ public:
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
+        rmt_ScopedCPUSample(OGESolver_shiftWindowTo, 0);
+#endif
 
-                int n = minValue - _curOffset;
+        int n = minValue - _curOffset;
         // cerr << "n=" << n << " minValue=" << minValue << " _curOffset=" << _curOffset << endl;
         for( int k = 0; k < n && _coeffs.size() > 0; ++k )
         {
@@ -328,11 +328,11 @@ public:
     std::vector< uint32_t > unique_blocks()
     {
 #ifdef USE_PROFILING
-        $
-        #endif
-                // cerr << "unique_blocks: n = " << _coeffs.size() << endl;
+        rmt_ScopedCPUSample(OGESolver_unique_blocks, 0);
+#endif
+        // cerr << "unique_blocks: n = " << _coeffs.size() << endl;
 
-                std::vector< uint32_t > ret;
+        std::vector< uint32_t > ret;
         for( std::vector< uint32_t > vv : _coeffs )
         {
             if( vv.size() == 1 )
@@ -343,81 +343,59 @@ public:
         return ret;
     }
 
-    std::vector< uint32_t > propagateBelief( uint32_t blockIdx )
+    void propagateBelief( std::vector<uint32_t> blist )
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
+        rmt_ScopedCPUSample(OGESolver_propagateBelief, 0);
+#endif
 
-                std::vector< uint32_t > ret;
-        std::shared_ptr< trevi::CodeBlock > cb = _blocks[ blockIdx - _curOffset ];
-
-        // Loop through all coeffs
-        for( int i = 0; i < _coeffs.size(); ++i )
+        for( uint32_t blockIdx : blist )
         {
-            // Try to find a composed block containing blockIdx
-            if( _coeffs[i].size() > 1 )
+            std::shared_ptr< trevi::CodeBlock > cb = _blocks[ blockIdx - _curOffset ];
+
+            // Loop through all coeffs
+            for( int i = blockIdx - _curOffset; i >= 0; --i )
             {
-                if(std::find(_coeffs[i].begin(), _coeffs[i].end(), blockIdx) != _coeffs[i].end())
+                // Try to find a composed block containing blockIdx
+                if( _coeffs[i].size() > 1 )
                 {
-#ifdef USE_LOG
-                    printVector( _coeffs[i] );
-                    cerr << "---- contains " << blockIdx << endl;
-#endif
-                    // Do something - XOR the block blockIdx from the found block
-                    std::shared_ptr< trevi::CodeBlock > block = _blocks[ i ];
-                    block->XOR_payload( cb );
-
-#ifdef USE_LOG
-                    cerr << "propagating " <<  blockIdx << " to..." << endl;
-                    cerr << "before:" << endl;
-                    printVector( _coeffs[i] );
-#endif
-
-                    // Remove reference from coeffs..
-                    _coeffs[i].erase(std::remove(_coeffs[i].begin(), _coeffs[i].end(), blockIdx), _coeffs[i].end());
-
-#ifdef USE_LOG
-                    cerr << "after:" << endl;
-                    printVector( _coeffs[i] );
-#endif
-
-                    // Check if codeblock has been fully decoded
-                    if( _coeffs[i].size() == 1 )
+                    if(std::find(_coeffs[i].begin(), _coeffs[i].end(), blockIdx) != _coeffs[i].end())
                     {
-                        ret.push_back( _coeffs[i][0] );
+#ifdef USE_LOG
+                        printVector( _coeffs[i] );
+                        cerr << "---- contains " << blockIdx << endl;
+#endif
+                        // Do something - XOR the block blockIdx from the found block
+                        std::shared_ptr< trevi::CodeBlock > block = _blocks[ i ];
+                        block->XOR_payload( cb );
+
+#ifdef USE_LOG
+                        cerr << "propagating " <<  blockIdx << " to..." << endl;
+                        cerr << "before:" << endl;
+                        printVector( _coeffs[i] );
+#endif
+
+                        // Remove reference from coeffs..
+                        _coeffs[i].erase(std::remove(_coeffs[i].begin(), _coeffs[i].end(), blockIdx), _coeffs[i].end());
+
+#ifdef USE_LOG
+                        cerr << "after:" << endl;
+                        printVector( _coeffs[i] );
+#endif
                     }
                 }
             }
         }
-        return ret;
     }
 
     void bpPass( std::vector< uint32_t > initialList )
     {
 
 #ifdef USE_PROFILING
-        $
-        #endif
-
-                std::stack< uint32_t > s;
-        // Initialize stack of blocks to propagate
-        for( uint32_t v : initialList )
-        {
-            s.push( v );
-        }
-
-        while( s.size() > 0 )
-        {
-            uint32_t next = s.top();
-            s.pop();
-            std::vector< uint32_t > rv = propagateBelief(next);
-            for( auto vrv : rv )
-            {
-                s.push( vrv );
-            }
-        }
+        rmt_ScopedCPUSample(OGESolver_bpPass, 0);
+#endif
+        propagateBelief(initialList);
 
     }
 
