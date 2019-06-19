@@ -21,8 +21,14 @@ else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+FIND_PACKAGE(OpenMP)
+  IF(OPENMP_FOUND)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ENDIF()
+
 # Add Dynamic Library Loader dependency, pthread, uuid (if UNIX-based)
-set( TREVI_DEPS "${TREVI_DEPS}" )
+set( TREVI_DEPS "${TREVI_DEPS};${OpenMP_CXX_LIBRARIES}" )
 
 # Set include directories
 include_directories( ${LIBTREVI_SOURCE_DIR}/include )

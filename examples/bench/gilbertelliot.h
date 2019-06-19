@@ -58,7 +58,7 @@ public:
 
     static GilbertElliot fromBadProbabilityAndBurstLength( double ssBadProba, double expectedBurstLength )
     {
-        ssBadProba /= 2.0;
+        ssBadProba /= 1.0;
         GilbertElliot ret;
         ret.beta = 1.0 / expectedBurstLength;
         // ret.gamma = (-1.0 * ssBadProba * ret.beta) / (ssBadProba - 1.0 );

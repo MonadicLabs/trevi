@@ -12,6 +12,8 @@
 
 #include <cstring>
 
+#include <omp.h>
+
 using namespace std;
 
 trevi::StreamEncoder::StreamEncoder(int encodingWindowSize, int numSourceBlockPerCodeBlock, int numCodeBlockPerSourceBlock)
@@ -36,15 +38,23 @@ void trevi::StreamEncoder::addData(std::shared_ptr<trevi::SourceBlock> cb, uint8
     cb->updateCRC();
     pushSourceBlock(cb);
 
+    omp_set_num_threads(4);
+
     if( _encodingWindow.size() > 0 && _curSeqIdx % _numSourceBlockPerCodeBlock == 0 )
     {
+        #pragma omp parallel for
         for( int j = 0; j < _numCodeBlockPerSourceBlock; ++j )
         {
+            int threadID = omp_get_thread_num();
+            // printf( "threadID=%d\n", threadID);
             auto polbak = createEncodedBlock( pickDegree() );
             if( polbak != nullptr )
             {
                 polbak->set_stream_id(streamId);
-                _codeBlocks.push_back( polbak );
+                {
+                  #pragma omp critical
+                  _codeBlocks.push_back( polbak );
+                }
             }
         }
     }
@@ -124,6 +134,10 @@ uint32_t trevi::StreamEncoder::latestSeqIdx()
 
 std::shared_ptr<trevi::CodeBlock> trevi::StreamEncoder::createEncodedBlock(uint16_t degree)
 {
+
+  #ifdef USE_PROFILING
+      rmt_ScopedCPUSample(StreamEncoder_createEncodedBlock, 0);
+  #endif
 
     std::set<uint32_t> compoSet;
     std::uniform_int_distribution<int> distribution(0,_encodingWindow.size()-1);

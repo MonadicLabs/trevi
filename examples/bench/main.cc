@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int generateRandomSourceBlock( uint8_t* buffer, int blockSize )
+void generateRandomSourceBlock( uint8_t* buffer, int blockSize )
 {
     memset( (void*)buffer, 0, blockSize );
     for( int k = 0; k < blockSize; ++k )
@@ -155,7 +155,7 @@ int main( int argc, char** argv )
             double t_encode = t_encode_sum / (double)encodeOpsCpt;
             cerr << "Average encode processing time = " << t_encode << " microsec." << endl;
 
-            double channelPacketLossProbability = (double)lossesCpt / (double)i;
+            double channelPacketLossProbability = (double)lossesCpt / (double)encodedPacketsCpt;
             cerr << "Channel packet loss: " << lossesCpt << " / " << i << " Channel loss probability: " << channelPacketLossProbability * 100.0 << "%" << endl;
 
             double packetLossProbabilty = (double)packetLossCpt / (double)i;

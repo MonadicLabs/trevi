@@ -64,8 +64,14 @@ public:
         addEquation( compoVec, cb->clone() );
         std::vector<uint32_t> after = unique_blocks();
         std::vector<uint32_t> diff;
-        std::set_difference(after.begin(), after.end(), before.begin(), before.end(),
-                            std::inserter(diff, diff.begin()));
+
+        {
+          #ifdef USE_PROFILING
+          rmt_ScopedCPUSample(OGESolver_set_difference, 0);
+          #endif
+          std::set_difference(after.begin(), after.end(), before.begin(), before.end(),
+                              std::inserter(diff, diff.begin()));
+        }
 
 #ifdef USE_LOG
         cerr << "*** NEW DECODED BLOCKS AFTER OGE:" << endl;

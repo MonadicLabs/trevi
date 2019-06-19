@@ -8,7 +8,6 @@
 #endif
 
 #include <cstring>
-
 #include <iostream>
 
 using namespace std;
@@ -58,7 +57,7 @@ int trevi_encoder_add_stream(trevi_encoder *encoder, int streamId, int encodingW
 int trevi_encode(trevi_encoder *encoder, int streamId, const void *buffer, int bufferSize)
 {
     trevi::Encoder * enc = reinterpret_cast<trevi::Encoder*>(encoder->encoderRef);
-    enc->addData( streamId, buffer, bufferSize );
+    enc->addData( streamId, (uint8_t*)buffer, bufferSize );
     return 0;
 }
 
@@ -70,7 +69,7 @@ int trevi_encoder_get_encoded_data(trevi_encoder *encoder, const void *out_buffe
     if( enc->hasEncodedBlocks() )
     {
         std::shared_ptr< trevi::CodeBlock > cb = enc->getEncodedBlock();
-        memcpy( out_buffer, cb->buffer_ptr(), cb->buffer_size() );
+        memcpy( (void*)out_buffer, cb->buffer_ptr(), cb->buffer_size() );
         return cb->buffer_size();
     }
 
@@ -117,7 +116,7 @@ int trevi_decoder_add_stream(trevi_decoder *decoder, int streamId, int decodingW
 int trevi_decode(trevi_decoder *decoder, const void *buffer, int bufferSize)
 {
     trevi::Decoder * dec = reinterpret_cast<trevi::Decoder*>(decoder->decoderRef);
-    dec->addCodeBlock(buffer, bufferSize);
+    dec->addCodeBlock((uint8_t*)buffer, bufferSize);
     return 0;
 }
 
@@ -129,7 +128,7 @@ int trevi_decoder_get_decoded_data(trevi_decoder *decoder, const void *out_buffe
     {
         std::shared_ptr< trevi::SourceBlock > sb = dec->pop();
         (*packetSeqIdx) = sb->get_global_sequence_idx();
-        memcpy( out_buffer, sb->payload_ptr(), sb->payload_size() );
+        memcpy( (void*)out_buffer, sb->payload_ptr(), sb->payload_size() );
         return sb->payload_size();
     }
 
