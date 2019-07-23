@@ -1,4 +1,4 @@
-#include "crc16.h"
+#include "../include/crc16.h"
 
 /*
  * Copyright 2001-2010 Georges Menie (www.menie.org)
