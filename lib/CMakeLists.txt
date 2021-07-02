@@ -3,7 +3,7 @@ project (LIBTREVI)
 
 # Set custom cmake scripts directory
 set( CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${LIBNOVALINK_SOURCE_DIR}/cmake")
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -fpermissive -flax-vector-conversions -Wcast-align -msse3 -mssse3" )
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -pthread -fpermissive -flax-vector-conversions -Wcast-align" )
 SET( CMAKE_EXE_LINKER_FLAGS "-pthread")
 
 # C99

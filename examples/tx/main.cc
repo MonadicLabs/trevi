@@ -17,6 +17,7 @@ int main( int argc, char** argv )
     a.add<int>("input_port", 'i', "UDP port for input data", false, 5000 );
     a.add<int>("output_port", 'o', "UDP port for encoded output data", false, 5001 );
     a.add<string>("output_host", 'h', "address of destination host for encoded data", false, "127.0.0.1" );
+    a.add<string>("output_iface", 'I', "address of destination host for encoded data", false, "lo" );
     a.add<int>("window_size", 'e', "Encoding window size (must be inferior or equal to 32)", false, 32 );
     a.add<int>("nsrc_blocks", 's', "Number of source block after which we send code blocks", false, 1 );
     a.add<int>("ncode_blocks", 'c', "Number of coded blocks to send after processing nsrc_blocks", false, 1 );
@@ -27,6 +28,7 @@ int main( int argc, char** argv )
     int udpInputPort = a.get<int>("input_port");
     int udpOutputPort = a.get<int>("output_port");
     std::string udpOutputHost = a.get<string>("output_host");
+    std::string udpOutputIface = a.get<string>("output_iface");
     int encodingWindowSize = a.get<int>("window_size");
     int nSrcBlocks = a.get<int>("nsrc_blocks");
     int nCodeBlocks = a.get<int>("ncode_blocks");
@@ -50,7 +52,7 @@ int main( int argc, char** argv )
     trevi_encoder_add_stream( encoder, 0, encodingWindowSize, nSrcBlocks, nCodeBlocks );
 
     UDPReceiver udpr( udpInputPort );
-    UDPTransmitter udpt( udpOutputPort, udpOutputHost  );
+    UDPTransmitter udpt( udpOutputPort, udpOutputHost, udpOutputIface );
 
     uint8_t buffer[ 2048 ];
 

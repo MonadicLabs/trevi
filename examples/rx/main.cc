@@ -13,6 +13,8 @@ int main( int argc, char** argv )
     cmdline::parser a;
 
     a.add<int>("input_port", 'i', "UDP port for encoded input data", false, 5001 );
+    a.add<string>("input_mcast_addr", 'm', "Multicast address for encoded input data", false, "");
+    a.add<string>("mcast_iface", 'I', "Multicast interface for encoded input data", false, "lo");
     a.add<int>("output_port", 'o', "UDP port for decoded output data", false, 5002 );
     a.add<string>("output_host", 'h', "address of destination host for decoded data", false, "127.0.0.1" );
     a.add<int>("window_size", 'd', "Decoding window size (must be strictly superior to encoding window size)", false, 64 );
@@ -22,7 +24,12 @@ int main( int argc, char** argv )
     int udpInputPort = a.get<int>("input_port");
     int udpOutputPort = a.get<int>("output_port");
     string udpOutputHost = a.get<string>("output_host");
-
+    string multicastAddr = a.get<string>("input_mcast_addr");
+    string multicastIface = "";
+    if( multicastAddr.size() > 0 )
+    {
+        multicastIface = a.get<string>("mcast_iface");
+    }
     cerr << "Starting Trevi UDP decoder: " << endl;
     cerr << "UDP input port for encoded data: \t\t\t" << udpInputPort << endl;
     cerr << "UDP output for decoded data: \t\t\t" << udpOutputHost << ":" << udpOutputPort << endl;
@@ -30,7 +37,7 @@ int main( int argc, char** argv )
 
     trevi_init();
 
-    UDPReceiver udpr( udpInputPort );
+    UDPReceiver udpr( udpInputPort, multicastIface, multicastAddr );
     UDPTransmitter udpt( udpOutputPort, udpOutputHost );
 
     int dsize = 0;
